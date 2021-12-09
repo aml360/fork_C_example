@@ -6,10 +6,8 @@
 
 void forkexample(int num1, int num2, int num2_mitad)
 {
-  int fd1[2], fd2[2];
-
+  int fd1[2];
   pipe(fd1);
-  pipe(fd2);
 
   if (fork() == 0)
   {
@@ -17,43 +15,28 @@ void forkexample(int num1, int num2, int num2_mitad)
     printf("Hello from Child1! %d\n", getpid());
     // Close read from pipe1
     close(fd1[0]);
-    unsigned long int value1 = 0;
+    unsigned long int result_child = 0;
     for (int i = 0; i <= num2_mitad; i++)
     {
-      value1 += i;
+      result_child += i;
     }
-    write(fd1[1], &value1, sizeof(value1));
+    write(fd1[1], &result_child, sizeof(result_child));
     exit(0);
   }
   else
   {
-    if (fork() == 0)
+    unsigned long int result_parent = 0;
+    for (int i = num2_mitad; i <= num2; i++)
     {
-      //-----------Child Process 2-----------
-      printf("Hello from Child2! %d\n", getpid());
-      // Close read from pipe2
-      close(fd2[0]);
-      unsigned long int value2 = 0;
-      for (int i = num2_mitad; i <= num2; i++)
-      {
-        value2 += i;
-      }
-
-      write(fd2[1], &value2, sizeof(value2));
-      exit(0);
+      result_parent += i;
     }
     close(fd1[1]);
-    close(fd2[1]);
-    unsigned long int buf_read[2];
-
-    read(fd1[0], &buf_read[0], sizeof(unsigned long int));
-    read(fd2[0], &buf_read[1], sizeof(unsigned long int));
-
-    unsigned long int suma_total = buf_read[0] + buf_read[1] + num1;
+    unsigned long int result_child;
+    read(fd1[0], &result_child, sizeof(result_child));
+    unsigned long int suma_total = result_child + result_parent + num1;
 
     pid_t cpid = wait(NULL);
-    pid_t cpid2 = wait(NULL);
-    printf("Hello from Parent!, pid: %d, value1: %ld, value2: %ld, sumatotal: %ld\n", getpid(), buf_read[0], buf_read[1], suma_total);
+    printf("Hello from Parent!, pid: %d, value1: %ld, value2: %ld, sumatotal: %ld\n", getpid(), result_child, result_parent, suma_total);
   }
 }
 
